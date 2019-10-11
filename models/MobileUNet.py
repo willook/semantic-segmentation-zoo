@@ -65,33 +65,36 @@ class ConvTransposeBlock(tf.keras.layers.Layer):
 class DownSamplingBlock(tf.keras.layers.Layer):
 	def __init__(self, n_filters, n):
 		super(DownSamplingBlock, self).__init__()
-		self.features = tf.keras.Sequential()
+		self.features = []
 		for _ in range(n):
-			self.features.add(DepthwiseSeparableConvBlock(n_filters))
-		self.features.add(MaxPool2D((2, 2), strides=2))
+			self.features.append(DepthwiseSeparableConvBlock(n_filters))
+		self.features.append(MaxPool2D((2, 2), strides=2))
 
 	def call(self, x):
-		return self.features(x)
+		for layer in self.features:
+			x = layer(x)
+		return x
 
 
 class UpSamplingBlock(tf.keras.layers.Layer):
 	def __init__(self, n_filters, n, is_skip, out_depthwise_ch):
 		super(UpSamplingBlock, self).__init__()
 		self.is_skip = is_skip
-		self.features = tf.keras.Sequential()
-		self.features.add(ConvTransposeBlock(n_filters))
+		self.features = []
+		self.features.append(ConvTransposeBlock(n_filters))
 		for _ in range(n):
-			self.features.add(DepthwiseSeparableConvBlock(n_filters))
-		self.features.add(DepthwiseSeparableConvBlock(out_depthwise_ch))
+			self.features.append(DepthwiseSeparableConvBlock(n_filters))
+		self.features.append(DepthwiseSeparableConvBlock(out_depthwise_ch))
 
 	def call(self, x1, x2):
-		x = self.features(x1)
+		for layer in self.features:
+			x1 = layer(x1)
 		if self.is_skip:
-			diffY = x2.shape[1] - x.shape[1]
-			diffX = x2.shape[2] - x.shape[2]
-			x = tf.pad(x, tf.constant([[0, 0], [diffY, 0], [diffX, 0], [0, 0]]))
-			x = tf.add(x, x2)
-		return x
+			diffY = x2.shape[1] - x1.shape[1]
+			diffX = x2.shape[2] - x1.shape[2]
+			x1 = tf.pad(x1, tf.constant([[0, 0], [diffY, 0], [diffX, 0], [0, 0]]))
+			x1 = tf.add(x1, x2)
+		return x1
 
 
 class MobileUNet(tf.keras.Model):
