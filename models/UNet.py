@@ -16,12 +16,16 @@ def ConvBlock(inputs, n_filters, kernel_size=[3, 3]):
     net = batch_norm(net)
     return net
 
-def conv_transpose_block(inputs, n_filters, kernel_size=[3, 3]):
+def conv_transpose_block(inputs, n_filters, kernel_size=[3, 3], output_shape = None):
     """
     Basic conv transpose block for Encoder-Decoder upsampling
     Apply successivly Transposed Convolution, BatchNormalization, ReLU
     """
-    conv2d_transpose_layer = tf.keras.layers.Conv2DTranspose(n_filters, kernel_size=kernel_size, strides=[2, 2], padding="same")
+    if output_shape is None:
+        output_padding = [1,1]
+    else:
+        output_padding = [(output_shape[1]+1)%2, (output_shape[2]+1)%2]
+    conv2d_transpose_layer = tf.keras.layers.Conv2DTranspose(n_filters, kernel_size=kernel_size, strides=[2, 2], output_padding=output_padding, padding="same")
     batch_norm = tf.keras.layers.BatchNormalization(axis = -1, fused=True)
 
     net = conv2d_transpose_layer(inputs)
@@ -64,26 +68,25 @@ def build_unet(inputs, preset_model, num_classes):
     # Upsampling path  #
     ####################
 
-    net = conv_transpose_block(net, 512)
+    net = conv_transpose_block(net, 512, output_shape = skip_4.shape)
     net = tf.add(net, skip_4)
     net = ConvBlock(net, 512)
     net = ConvBlock(net, 512)
 
-    net = conv_transpose_block(net, 256)
+    net = conv_transpose_block(net, 256, output_shape = skip_3.shape)
     net = tf.add(net, skip_3)
     net = ConvBlock(net, 256)
     net = ConvBlock(net, 256)
 
-    net = conv_transpose_block(net, 128)
+    net = conv_transpose_block(net, 128, output_shape = skip_2.shape)
     net = tf.add(net, skip_2)
     net = ConvBlock(net, 128)
     net = ConvBlock(net, 128)
 
-    net = conv_transpose_block(net, 64)
+    net = conv_transpose_block(net, 64, output_shape = skip_1.shape)
     net = tf.add(net, skip_1)
     net = ConvBlock(net, 64)
     net = ConvBlock(net, 64)
-
     #####################
     #      Softmax      #
     #####################
