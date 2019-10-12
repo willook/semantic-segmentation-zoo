@@ -16,16 +16,16 @@ def ConvBlock(inputs, n_filters, kernel_size=[3, 3]):
     net = batch_norm(net)
     return net
 
-def conv_transpose_block(inputs, n_filters, kernel_size=[3, 3], output_shape = None):
+def conv_transpose_block(inputs, n_filters, kernel_size=[3, 3], strides=[2, 2], output_shape=None):
     """
     Basic conv transpose block for Encoder-Decoder upsampling
     Apply successivly Transposed Convolution, BatchNormalization, ReLU
     """
     if output_shape is None:
-        output_padding = [1,1]
+        output_padding = [strides[0]-1,strides[1]-1]
     else:
-        output_padding = [(output_shape[1]+1)%2, (output_shape[2]+1)%2]
-    conv2d_transpose_layer = tf.keras.layers.Conv2DTranspose(n_filters, kernel_size=kernel_size, strides=[2, 2], output_padding=output_padding, padding="same")
+        output_padding = [(output_shape[1]+strides[0]-1)%strides[0], (output_shape[2]+strides[1]-1)%strides[1]]
+    conv2d_transpose_layer = tf.keras.layers.Conv2DTranspose(n_filters, kernel_size=kernel_size, strides=strides, output_padding=output_padding, padding="same")
     batch_norm = tf.keras.layers.BatchNormalization(axis = -1, fused=True)
 
     net = conv2d_transpose_layer(inputs)
@@ -38,8 +38,10 @@ def build_unet(inputs, preset_model, num_classes):
     #####################
     # Downsampling path #
     #####################
+
+    strides = (2, 2)
     
-    max_pooling = tf.keras.layers.MaxPool2D(pool_size = (2,2), strides = (2,2), padding = "same")
+    max_pooling = tf.keras.layers.MaxPool2D(pool_size=(2,2), strides=strides, padding="same")
     
     net = ConvBlock(inputs, 64)
     net = ConvBlock(net, 64)
@@ -68,25 +70,26 @@ def build_unet(inputs, preset_model, num_classes):
     # Upsampling path  #
     ####################
 
-    net = conv_transpose_block(net, 512, output_shape = skip_4.shape)
+    net = conv_transpose_block(net, 512, strides=strides, output_shape=skip_4.shape)
     net = tf.add(net, skip_4)
     net = ConvBlock(net, 512)
     net = ConvBlock(net, 512)
 
-    net = conv_transpose_block(net, 256, output_shape = skip_3.shape)
+    net = conv_transpose_block(net, 256, strides=strides, output_shape=skip_3.shape)
     net = tf.add(net, skip_3)
     net = ConvBlock(net, 256)
     net = ConvBlock(net, 256)
 
-    net = conv_transpose_block(net, 128, output_shape = skip_2.shape)
+    net = conv_transpose_block(net, 128, strides=strides, output_shape=skip_2.shape)
     net = tf.add(net, skip_2)
     net = ConvBlock(net, 128)
     net = ConvBlock(net, 128)
 
-    net = conv_transpose_block(net, 64, output_shape = skip_1.shape)
+    net = conv_transpose_block(net, 64, strides=strides, output_shape=skip_1.shape)
     net = tf.add(net, skip_1)
     net = ConvBlock(net, 64)
     net = ConvBlock(net, 64)
+
     #####################
     #      Softmax      #
     #####################
