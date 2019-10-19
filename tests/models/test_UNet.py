@@ -10,13 +10,13 @@ class TestStringMethods(unittest.TestCase):
 
     def network(self, input_shape, num_classes):
         output_shape = input_shape[:-1] + (num_classes,)
-        X = self.get_random_data(input_shape)
-        inputs = tf.placeholder(tf.float32, shape=input_shape)
-        net = build_unet(inputs, "UNet", num_classes)
+        input_data = self.get_random_data(input_shape)
+        net_input = tf.placeholder(tf.float32, shape=input_shape)
+        net = build_unet(net_input, "UNet", num_classes)
         
         sess = tf.Session()
         sess.run(tf.global_variables_initializer())
-        net = sess.run(net, feed_dict = {inputs: X})
+        net = sess.run(net, feed_dict = {net_input: input_data})
         return net, output_shape
     
     def test_ConvBlock(self):
@@ -24,13 +24,13 @@ class TestStringMethods(unittest.TestCase):
         input_shape = (1,32,32,4)
         output_shape = input_shape[:-1] + (num_classes,)
         
-        inputs = tf.placeholder(tf.float32, shape=input_shape)
-        net = ConvBlock(inputs, num_classes)
+        net_input = tf.placeholder(tf.float32, shape=input_shape)
+        net = ConvBlock(net_input, num_classes)
         
-        X = self.get_random_data(input_shape)
+        input_data = self.get_random_data(input_shape)
         sess = tf.Session()
         sess.run(tf.global_variables_initializer())
-        output = sess.run(net, feed_dict = {inputs: X})
+        output = sess.run(net, feed_dict = {net_input: input_data})
         self.assertEqual(output_shape, output.shape)
     
     def test_conv_transpose_block(self):
@@ -38,13 +38,13 @@ class TestStringMethods(unittest.TestCase):
         input_shape = (1,32,32,num_classes)
         output_shape = (1,64,64,num_classes)
         
-        inputs = tf.placeholder(tf.float32, shape=input_shape)
-        net = conv_transpose_block(inputs, num_classes)
+        net_input = tf.placeholder(tf.float32, shape=input_shape)
+        net = conv_transpose_block(net_input, num_classes)
         
-        X = self.get_random_data(input_shape)
+        input_data = self.get_random_data(input_shape)
         sess = tf.Session()
         sess.run(tf.global_variables_initializer())
-        output = sess.run(net, feed_dict = {inputs: X})
+        output = sess.run(net, feed_dict = {net_input: input_data})
         self.assertEqual(output_shape, output.shape)
 
     def test_conv_transpose_padding(self):
@@ -61,29 +61,30 @@ class TestStringMethods(unittest.TestCase):
         input_shape4 = (1,1,1,num_classes)
         output_shape4 = (1,2,2,num_classes)
         
-        inputs1 = tf.placeholder(tf.float32, shape=input_shape1)
-        inputs2 = tf.placeholder(tf.float32, shape=input_shape2)
-        inputs3 = tf.placeholder(tf.float32, shape=input_shape3)
-        inputs4 = tf.placeholder(tf.float32, shape=input_shape4)
+        net_input1 = tf.placeholder(tf.float32, shape=input_shape1)
+        net_input2 = tf.placeholder(tf.float32, shape=input_shape2)
+        net_input3 = tf.placeholder(tf.float32, shape=input_shape3)
+        net_input4 = tf.placeholder(tf.float32, shape=input_shape4)
         
-        net1 = conv_transpose_block(inputs1, num_classes,
+        net1 = conv_transpose_block(net_input1, num_classes,
                                     output_shape=output_shape1)
-        net2 = conv_transpose_block(inputs2, num_classes,
+        net2 = conv_transpose_block(net_input2, num_classes,
                                     output_shape=output_shape2)
-        net3 = conv_transpose_block(inputs3, num_classes,
+        net3 = conv_transpose_block(net_input3, num_classes,
                                     output_shape=output_shape3)
-        net4 = conv_transpose_block(inputs4, num_classes,
+        net4 = conv_transpose_block(net_input4, num_classes,
                                     output_shape=output_shape4)
         
-        X1 = self.get_random_data(input_shape1)
-        X2 = self.get_random_data(input_shape2)
-        X3 = self.get_random_data(input_shape3)
-        X4 = self.get_random_data(input_shape4)
+        input_data1 = self.get_random_data(input_shape1)
+        input_data2 = self.get_random_data(input_shape2)
+        input_data3 = self.get_random_data(input_shape3)
+        input_data4 = self.get_random_data(input_shape4)
         
         sess = tf.Session()
         sess.run(tf.global_variables_initializer())
         output_list = sess.run([net1, net2, net3, net4],
-            feed_dict = {inputs1: X1,inputs2: X2, inputs3: X3,inputs4: X4})
+            feed_dict = {net_input1: input_data1, net_input2: input_data2,
+                         net_input3: input_data3, net_input4: input_data4})
        
         self.assertEqual(output_shape1, output_list[0].shape)
         self.assertEqual(output_shape2, output_list[1].shape)
@@ -96,27 +97,27 @@ class TestStringMethods(unittest.TestCase):
         output_shape = (1,95,121,num_classes)
         strides = [3, 4]
         
-        inputs = tf.placeholder(tf.float32, shape=input_shape)
-        net = conv_transpose_block(inputs, num_classes, strides=strides,
+        net_input = tf.placeholder(tf.float32, shape=input_shape)
+        net = conv_transpose_block(net_input, num_classes, strides=strides,
             output_shape=output_shape)
         
-        X = self.get_random_data(input_shape)
+        input_data = self.get_random_data(input_shape)
         sess = tf.Session()
         sess.run(tf.global_variables_initializer())
-        output = sess.run(net, feed_dict = {inputs: X})
+        output = sess.run(net, feed_dict = {net_input: input_data})
         self.assertEqual(output_shape, output.shape)
     
     def test_output_type(self):
         num_classes = 16
         input_shape = (1,32,32,3)
         output_shape = input_shape[:-1] + (num_classes,)
-        X = self.get_random_data(input_shape)
-        inputs = tf.placeholder(tf.float32, shape=input_shape)
-        net = build_unet(inputs, "UNet", num_classes)
+        input_data = self.get_random_data(input_shape)
+        net_input = tf.placeholder(tf.float32, shape=input_shape)
+        net = build_unet(net_input, "UNet", num_classes)
         
         sess = tf.Session()
         sess.run(tf.global_variables_initializer())
-        output = sess.run(net, feed_dict = {inputs: X})
+        output = sess.run(net, feed_dict = {net_input: input_data})
         
         self.assertIsInstance(net, tf.Tensor)
         self.assertIsInstance(output, np.ndarray)
