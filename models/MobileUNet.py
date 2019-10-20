@@ -121,9 +121,9 @@ class MobileUNet(tf.keras.Model):
         self.fc = Conv2D(num_classes, kernel_size=[1, 1], padding='same', activation=None)
 
     def call(self, inputs):
-		#####################
-		# Downsampling path #
-		#####################
+        #####################
+        # Downsampling path #
+        #####################
         net = self.conv_block(inputs)
 
         net = self.downsampling_block1(net)
@@ -139,6 +139,7 @@ class MobileUNet(tf.keras.Model):
         skip_4 = net
 
         net = self.downsampling_block5(net)
+
         #####################
         #  Upsampling path  #
         #####################
@@ -155,8 +156,10 @@ class MobileUNet(tf.keras.Model):
         diffY = inputs.shape[1] - net.shape[1]
         diffX = inputs.shape[2] - net.shape[2]
         net = tf.pad(net, tf.constant([[0, 0], [diffY, 0], [diffX, 0], [0, 0]]))
+
         #####################
         #      Softmax      #
         #####################
         net = self.fc(net)
+        
         return net
