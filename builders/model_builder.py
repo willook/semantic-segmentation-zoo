@@ -7,7 +7,7 @@ from models.FC_DenseNet_Tiramisu import build_fc_densenet
 from models.Encoder_Decoder import build_encoder_decoder
 from models.RefineNet import build_refinenet
 from models.FRRN import build_frrn
-from models.MobileUNet import build_mobile_unet
+from models.MobileUNet import MobileUNet
 from models.PSPNet import build_pspnet
 from models.GCN import build_gcn
 from models.DeepLabV3 import build_deeplabv3
@@ -65,7 +65,8 @@ def build_model(model_name, net_input, num_classes, crop_width, crop_height, fro
 	elif model_name == "Encoder-Decoder" or model_name == "Encoder-Decoder-Skip":
 	    network = build_encoder_decoder(net_input, preset_model = model_name, num_classes=num_classes)
 	elif model_name == "MobileUNet" or model_name == "MobileUNet-Skip":
-	    network = build_mobile_unet(net_input, preset_model = model_name, num_classes=num_classes)
+	    build_MobileUNet = MobileUNet(num_classes, preset_model = model_name)
+	    network = build_MobileUNet(net_input)
 	elif model_name == "PSPNet":
 	    # Image size is required for PSPNet
 	    # PSPNet requires pre-trained ResNet weights

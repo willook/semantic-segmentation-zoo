@@ -155,7 +155,8 @@ class MobileUNet(tf.keras.Model):
 
         diffY = inputs.shape[1] - net.shape[1]
         diffX = inputs.shape[2] - net.shape[2]
-        net = tf.pad(net, tf.constant([[0, 0], [diffY, 0], [diffX, 0], [0, 0]]))
+        paddings = tf.constant([[0, 0], [diffY.value, 0], [diffX.value, 0], [0, 0]])
+        net = tf.pad(net, paddings)
 
         #####################
         #      Softmax      #
